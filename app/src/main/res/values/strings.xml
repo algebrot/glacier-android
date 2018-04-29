@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">Glacierback</string>
+
+    <!-- navigation drawer items -->
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    <string name="navbar_title">Select a feature</string>
+
+    <!-- feature service gnp facilities url -->
+    <string name="sample_service_url">https://services8.arcgis.com/UT5WPtsyyxzDrV2P/arcgis/rest/services/GNP_Fields/FeatureServer</string>
+    <string name="layer0_url">https://services8.arcgis.com/UT5WPtsyyxzDrV2P/ArcGIS/rest/services/GNP_Fields/FeatureServer/1</string>
+    <string name="layer1_url">https://services8.arcgis.com/UT5WPtsyyxzDrV2P/ArcGIS/rest/services/GNP_Fields/FeatureServer/3</string>
+
+    <!-- webmap titles -->
+    <string name="navi">Navigation</string>
+    <string name="offline">Offline</string>
+    <string name="edit">Edit data</string>
+
+    <!-- device location -->
+    <string name="location_permission_denied">LocationDisplayManager cannot run because location permission was denied</string>
+
+    <!-- offline -->
+    <string name="write_permission">Write permission required to access local TileCache.</string>
+    <string name="glacier_sync">https://services8.arcgis.com/UT5WPtsyyxzDrV2P/arcgis/rest/services/GNP_Fields/MapServer</string>
+    <string name="file_name">gnp.geodatabase</string>
+    <string name="gen_geodatabase_button_text">Generate Geodatabase</string>
+    <string name="startediting_text">Start Editing</string>
+    <string name="sync_geodatabase_button_text">Sync Geodatabase</string>
+    <string name="progress_starting">Starting</string>
+    <string name="progress_started">Started</string>
+    <string name="progress_syncing">Syncing</string>
+    <string name="progress_done">Done</string>
+    <string name="progress_fetching">Fetching result</string>
+
+
+    <!-- Progress dialog messages -->
+    <string name="progress_title">Updating attribute type</string>
+    <string name="progress_message">Please wait&#8230;</string>
+
+</resources>
