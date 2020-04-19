@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                 if (dataSourceStatusChangedEvent.getError() == null)
                     return;
 
-                // if an error is found, handle the failure to start.
+                // if an err:or is found, handle the failure to start.
                 // check permissions to see if failure may be due to lack of permissions.
                 boolean permissionCheck1 = ContextCompat.checkSelfPermission(MainActivity.this, reqPermissions[0]) ==
                         PackageManager.PERMISSION_GRANTED;
