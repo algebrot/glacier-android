@@ -11,7 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import java.util.ArrayList;
 
-// based off of Display device location sample code
+// Based off of 'Display device location' sample code
 // https://github.com/Esri/arcgis-runtime-samples-android/tree/master/java/display-device-location
 
 public class SpinnerAdapter extends ArrayAdapter<ItemData> {

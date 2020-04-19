@@ -8,9 +8,8 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-// based off of Feature layer update attributes sample code
+// Based off of 'Feature layer update attributes' sample code
 // https://github.com/Esri/arcgis-runtime-samples-android/tree/master/java/feature-layer-update-attributes
-
 
 public class ListActivity extends AppCompatActivity {
 

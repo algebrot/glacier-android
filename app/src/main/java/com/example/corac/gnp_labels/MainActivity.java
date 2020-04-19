@@ -1,13 +1,9 @@
 package com.example.corac.gnp_labels;
 
 import android.Manifest;
-import android.app.ActionBar;
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -29,53 +25,36 @@ import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.esri.arcgisruntime.ArcGISRuntimeException;
-import com.esri.arcgisruntime.concurrent.Job;
 import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.data.Feature;
 import com.esri.arcgisruntime.data.FeatureQueryResult;
-import com.esri.arcgisruntime.data.FeatureTable;
 import com.esri.arcgisruntime.data.Geodatabase;
-import com.esri.arcgisruntime.data.GeodatabaseFeatureTable;
 import com.esri.arcgisruntime.data.QueryParameters;
 import com.esri.arcgisruntime.data.ServiceFeatureTable;
-import com.esri.arcgisruntime.data.TileCache;
 import com.esri.arcgisruntime.geometry.Envelope;
-import com.esri.arcgisruntime.geometry.Geometry;
-import com.esri.arcgisruntime.geometry.GeometryType;
 import com.esri.arcgisruntime.geometry.Point;
-import com.esri.arcgisruntime.geometry.SpatialReference;
-import com.esri.arcgisruntime.layers.ArcGISTiledLayer;
 import com.esri.arcgisruntime.layers.FeatureLayer;
-import com.esri.arcgisruntime.layers.Layer;
-import com.esri.arcgisruntime.loadable.LoadStatus;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.Basemap;
-import com.esri.arcgisruntime.mapping.Bookmark;
-import com.esri.arcgisruntime.mapping.MobileMapPackage;
-import com.esri.arcgisruntime.mapping.Viewpoint;
 import com.esri.arcgisruntime.mapping.popup.PopupAttachment;
 import com.esri.arcgisruntime.mapping.view.Callout;
+import com.esri.arcgisruntime.mapping.view.Camera;
 import com.esri.arcgisruntime.mapping.view.DefaultMapViewOnTouchListener;
-import com.esri.arcgisruntime.mapping.view.Graphic;
 import com.esri.arcgisruntime.mapping.view.GraphicsOverlay;
 import com.esri.arcgisruntime.mapping.view.LocationDisplay;
 import com.esri.arcgisruntime.mapping.view.MapView;
-import com.esri.arcgisruntime.symbology.SimpleLineSymbol;
-import com.esri.arcgisruntime.tasks.geodatabase.GenerateGeodatabaseJob;
-import com.esri.arcgisruntime.tasks.geodatabase.GenerateGeodatabaseParameters;
 import com.esri.arcgisruntime.tasks.geodatabase.GeodatabaseSyncTask;
-import com.esri.arcgisruntime.tasks.geodatabase.SyncGeodatabaseJob;
-import com.esri.arcgisruntime.tasks.geodatabase.SyncGeodatabaseParameters;
-import com.esri.arcgisruntime.tasks.geodatabase.SyncLayerOption;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
+
+// todos:
+// 1. fix offline thing
+// 2. nav thing
+// 3. add map key
 
 public class MainActivity extends AppCompatActivity {
 
@@ -134,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         });*/
 
         // when you tap on the download icon, start the offline activity
-
+        //
 
         // get the MapView's LocationDisplay
         mLocationDisplay = aMapView.getLocationDisplay();

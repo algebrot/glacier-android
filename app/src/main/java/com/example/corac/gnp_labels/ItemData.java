@@ -1,6 +1,6 @@
 package com.example.corac.gnp_labels;
 
-// based off of Display device location sample code
+// Based off of 'Display device location' sample code
 // https://github.com/Esri/arcgis-runtime-samples-android/tree/master/java/display-device-location
 
 
