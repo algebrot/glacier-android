@@ -20,7 +20,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
-
         assertEquals("com.example.corac.gnp_labels", appContext.getPackageName());
     }
 }

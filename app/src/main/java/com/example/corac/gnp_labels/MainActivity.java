@@ -102,19 +102,6 @@ public class MainActivity extends AppCompatActivity {
         map = new ArcGISMap(Basemap.Type.LIGHT_GRAY_CANVAS_VECTOR, 48.6596, -113.7870, 9);
         aMapView.setMap(map);
 
-        /*final Button startedits = (Button) findViewById(R.id.startediting);
-        startedits.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, EditActivity.class);
-                startActivity(intent);
-                //startediting.setVisibility( View.GONE );
-                //mGeodatabaseButton.setVisibility( View.VISIBLE );
-            }
-        });*/
-
-        // when you tap on the download icon, start the offline activity
-        //
-
         // get the MapView's LocationDisplay
         mLocationDisplay = aMapView.getLocationDisplay();
 
@@ -131,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
                 if (dataSourceStatusChangedEvent.getError() == null)
                     return;
 
-                // if an err:or is found, handle the failure to start.
+                // if an err::or is found, handle the failure to start.
                 // check permissions to see if failure may be due to lack of permissions.
                 boolean permissionCheck1 = ContextCompat.checkSelfPermission(MainActivity.this, reqPermissions[0]) ==
                         PackageManager.PERMISSION_GRANTED;

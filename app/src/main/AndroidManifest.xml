@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.corac.gnp_labels">
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher_foreground"
@@ -20,19 +18,5 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".EditActivity"
-            android:parentActivityName=".MainActivity">
-
-            <!-- The meta-data tag is required if you support API level 15 and lower -->
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
-        <activity android:name=".ListActivity" />
-        <activity android:name=".OfflineActivity"
-            android:parentActivityName=".MainActivity" >
-        </activity>
     </application>
-
 </manifest>
