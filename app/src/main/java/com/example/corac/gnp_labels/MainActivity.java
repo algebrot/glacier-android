@@ -65,6 +65,7 @@ import java.util.Set;
 // 1. fix offline thing
 // 2. nav thing
 // 3. add map key
+// 4. clean up map s.t. attrs can be turned on an off
 
 public class MainActivity extends AppCompatActivity {
 
@@ -135,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
                     Envelope envelope = new Envelope(minPoint, maxPoint);
                     mDownloadArea.setGeometry(envelope);
                     // enable the take map offline button only after the map is loaded
-                    // mTakeMapOfflineButton.setEnabled(true);
+                    mTakeMapOfflineButton.setEnabled(true);
                 }
             }
         });
@@ -149,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         progressDialog.setProgress(0);
 
         mTakeMapOfflineButton.setOnClickListener(v -> {
-            /*progressDialog.show();
+            progressDialog.show();
 
             // delete any offline map already in the cache
             String tempDirectoryPath = getExternalCacheDir() + File.separator + "offlineMap";
@@ -165,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
             GenerateOfflineMapParameters generateOfflineMapParameters = new GenerateOfflineMapParameters(
                     mDownloadArea.getGeometry(), minScale, maxScale);
             // set job to cancel on any errors
-            generateOfflineMapParameters.setContinueOnErrors(false);
+            generateOfflineMapParameters.setContinueOnErrors(true);
 
             // create an offline map offlineMapTask with the map
             OfflineMapTask offlineMapTask = new OfflineMapTask(aMapView.getMap());
@@ -193,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
             job.addProgressChangedListener(() -> progressDialog.setProgress(job.getProgress()));
 
             // start the job
-            job.start();*/
+            job.start();
         });
 
         // get the MapView's LocationDisplay
@@ -545,6 +546,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         aMapView.resume();
+    }
+
+    /**
+     * Recursively deletes all files in the given directory.
+     *
+     * @param file to delete
+     */
+    private static void deleteDirectory(File file) {
+        if (file.isDirectory())
+            for (File subFile : file.listFiles()) {
+                deleteDirectory(subFile);
+            }
+        if (!file.delete()) {
+            Log.e(TAG, "Failed to delete file: " + file.getPath());
+        }
     }
 }
 
