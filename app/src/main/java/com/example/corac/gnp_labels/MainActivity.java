@@ -1,6 +1,7 @@
 package com.example.corac.gnp_labels;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -25,6 +26,7 @@ import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.esri.arcgisruntime.concurrent.Job;
 import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.data.Feature;
 import com.esri.arcgisruntime.data.FeatureQueryResult;
@@ -34,17 +36,25 @@ import com.esri.arcgisruntime.data.ServiceFeatureTable;
 import com.esri.arcgisruntime.geometry.Envelope;
 import com.esri.arcgisruntime.geometry.Point;
 import com.esri.arcgisruntime.layers.FeatureLayer;
+import com.esri.arcgisruntime.loadable.LoadStatus;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.Basemap;
 import com.esri.arcgisruntime.mapping.popup.PopupAttachment;
 import com.esri.arcgisruntime.mapping.view.Callout;
 import com.esri.arcgisruntime.mapping.view.Camera;
 import com.esri.arcgisruntime.mapping.view.DefaultMapViewOnTouchListener;
+import com.esri.arcgisruntime.mapping.view.Graphic;
 import com.esri.arcgisruntime.mapping.view.GraphicsOverlay;
 import com.esri.arcgisruntime.mapping.view.LocationDisplay;
 import com.esri.arcgisruntime.mapping.view.MapView;
+import com.esri.arcgisruntime.symbology.SimpleLineSymbol;
 import com.esri.arcgisruntime.tasks.geodatabase.GeodatabaseSyncTask;
+import com.esri.arcgisruntime.tasks.offlinemap.GenerateOfflineMapJob;
+import com.esri.arcgisruntime.tasks.offlinemap.GenerateOfflineMapParameters;
+import com.esri.arcgisruntime.tasks.offlinemap.GenerateOfflineMapResult;
+import com.esri.arcgisruntime.tasks.offlinemap.OfflineMapTask;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -66,6 +76,12 @@ public class MainActivity extends AppCompatActivity {
     private LocationDisplay mLocationDisplay;
     private Spinner mSpinner;
 
+    // offline references
+    private static final String TAG = MainActivity.class.getSimpleName();
+    private Button mTakeMapOfflineButton;
+    private GraphicsOverlay mGraphicsOverlay;
+    private Graphic mDownloadArea;
+
     // request codes from Android
     private int requestCode = 2;
     String[] reqPermissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission
@@ -74,19 +90,6 @@ public class MainActivity extends AppCompatActivity {
     // popups
     private Callout aCallout;
     private ServiceFeatureTable table0, table1;
-
-    // offline
-    private RelativeLayout mProgressLayout;
-    private TextView mProgressTextView;
-    private ProgressBar mProgressBar;
-    private Button mGeodatabaseButton;
-    private List<Feature> mSelectedFeatures;
-    private PopupAttachment.EditState mCurrentEditState;
-    private GraphicsOverlay mGraphicsOverlay;
-    private GeodatabaseSyncTask mGeodatabaseSyncTask;
-    private Geodatabase mGeodatabase;
-    private final String TAG = MainActivity.class.getSimpleName();
-    private final String[] reqPermission = new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,8 +102,99 @@ public class MainActivity extends AppCompatActivity {
         // inflate MapView from layout
         aMapView = (MapView) findViewById(R.id.mapView);
 
+        // access button to take the map offline and disable it until map is loaded
+        mTakeMapOfflineButton = findViewById(R.id.action_download);
+        mTakeMapOfflineButton.setEnabled(false);
+
         map = new ArcGISMap(Basemap.Type.LIGHT_GRAY_CANVAS_VECTOR, 48.6596, -113.7870, 9);
         aMapView.setMap(map);
+
+        // create a graphics overlay for the map view
+        mGraphicsOverlay = new GraphicsOverlay();
+        aMapView.getGraphicsOverlays().add(mGraphicsOverlay);
+
+        // create a graphic to show a box around the extent we want to download
+        mDownloadArea = new Graphic();
+        mGraphicsOverlay.getGraphics().add(mDownloadArea);
+        SimpleLineSymbol simpleLineSymbol = new SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.RED, 2);
+        mDownloadArea.setSymbol(simpleLineSymbol);
+
+        // update the download area box whenever the viewpoint changes
+        aMapView.addViewpointChangedListener(viewpointChangedEvent -> {
+            if (map.getLoadStatus() == LoadStatus.LOADED) {
+                // upper left corner of the area to take offline
+                android.graphics.Point minScreenPoint = new android.graphics.Point(200, 200);
+                // lower right corner of the downloaded area
+                android.graphics.Point maxScreenPoint = new android.graphics.Point(aMapView.getWidth() - 200,
+                        aMapView.getHeight() - 200);
+                // convert screen points to map points
+                Point minPoint = aMapView.screenToLocation(minScreenPoint);
+                Point maxPoint = aMapView.screenToLocation(maxScreenPoint);
+                // use the points to define and return an envelope
+                if (minPoint != null && maxPoint != null) {
+                    Envelope envelope = new Envelope(minPoint, maxPoint);
+                    mDownloadArea.setGeometry(envelope);
+                    // enable the take map offline button only after the map is loaded
+                    // mTakeMapOfflineButton.setEnabled(true);
+                }
+            }
+        });
+
+        // create a progress dialog to show download progress
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Generate offline map job");
+        progressDialog.setMessage("Taking map offline...");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progressDialog.setIndeterminate(false);
+        progressDialog.setProgress(0);
+
+        mTakeMapOfflineButton.setOnClickListener(v -> {
+            /*progressDialog.show();
+
+            // delete any offline map already in the cache
+            String tempDirectoryPath = getExternalCacheDir() + File.separator + "offlineMap";
+            deleteDirectory(new File(tempDirectoryPath));
+
+            // specify the extent, min scale, and max scale as parameters
+            double minScale = aMapView.getMapScale();
+            double maxScale = aMapView.getMap().getMaxScale();
+            // minScale must always be larger than maxScale
+            if (minScale <= maxScale) {
+                minScale = maxScale + 1;
+            }
+            GenerateOfflineMapParameters generateOfflineMapParameters = new GenerateOfflineMapParameters(
+                    mDownloadArea.getGeometry(), minScale, maxScale);
+            // set job to cancel on any errors
+            generateOfflineMapParameters.setContinueOnErrors(false);
+
+            // create an offline map offlineMapTask with the map
+            OfflineMapTask offlineMapTask = new OfflineMapTask(aMapView.getMap());
+
+            // create an offline map job with the download directory path and parameters and start the job
+            GenerateOfflineMapJob job = offlineMapTask.generateOfflineMap(generateOfflineMapParameters, tempDirectoryPath);
+
+            // replace the current map with the result offline map when the job finishes
+            job.addJobDoneListener(() -> {
+                if (job.getStatus() == Job.Status.SUCCEEDED) {
+                    GenerateOfflineMapResult result = job.getResult();
+                    aMapView.setMap(result.getOfflineMap());
+                    mGraphicsOverlay.getGraphics().clear();
+                    mTakeMapOfflineButton.setEnabled(false);
+                    Toast.makeText(this, "Now displaying offline map.", Toast.LENGTH_LONG).show();
+                } else {
+                    String error = "Error in generate offline map job: " + job.getError().getAdditionalMessage();
+                    Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                    Log.e(TAG, error);
+                }
+                progressDialog.dismiss();
+            });
+
+            // show the job's progress with the progress dialog
+            job.addProgressChangedListener(() -> progressDialog.setProgress(job.getProgress()));
+
+            // start the job
+            job.start();*/
+        });
 
         // get the MapView's LocationDisplay
         mLocationDisplay = aMapView.getLocationDisplay();
@@ -118,19 +212,19 @@ public class MainActivity extends AppCompatActivity {
                 if (dataSourceStatusChangedEvent.getError() == null)
                     return;
 
-                // if an err::or is found, handle the failure to start.
-                // check permissions to see if failure may be due to lack of permissions.
+                // if an error is found, handle the failure to start
+                // check permissions to see if failure may be due to lack of permissions
                 boolean permissionCheck1 = ContextCompat.checkSelfPermission(MainActivity.this, reqPermissions[0]) ==
                         PackageManager.PERMISSION_GRANTED;
                 boolean permissionCheck2 = ContextCompat.checkSelfPermission(MainActivity.this, reqPermissions[1]) ==
                         PackageManager.PERMISSION_GRANTED;
 
                 if (!(permissionCheck1 && permissionCheck2)) {
-                    // if permissions are not already granted, request permission from the user.
+                    // if permissions are not already granted, request permission from the user
                     ActivityCompat.requestPermissions(MainActivity.this, reqPermissions, requestCode);
                 } else {
                     // report other unknown failure types to the user - for example, location services may not
-                    // be enabled on the device.
+                    // be enabled on the device
                     String message = String.format("Error in DataSourceStatusChangedListener: %s", dataSourceStatusChangedEvent
                             .getSource().getLocationDataSource().getError().getMessage());
                     Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
@@ -168,23 +262,23 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case 2:
                         // AutoPanMode - Default: In this mode, the MapView attempts to keep the location symbol on-screen by
-                        // re-centering the location symbol when the symbol moves outside a "wander extent". The location symbol
-                        // may move freely within the wander extent, but as soon as the symbol exits the wander extent, the MapView
-                        // re-centers the map on the symbol.
+                        // re-centering the location symbol when the symbol moves outside a "wander extent" and while the location symbol
+                        // may move freely within the wander extent, as soon as the symbol exits the wander extent, the MapView
+                        // re-centers the map on the symbol
                         mLocationDisplay.setAutoPanMode(LocationDisplay.AutoPanMode.RECENTER);
                         if (!mLocationDisplay.isStarted())
                             mLocationDisplay.startAsync();
                         break;
                     case 3:
                         // Start Navigation Mode
-                        // This mode is best suited for in-vehicle navigation.
+                        // This mode is best suited for in-vehicle navigation
                         mLocationDisplay.setAutoPanMode(LocationDisplay.AutoPanMode.NAVIGATION);
                         if (!mLocationDisplay.isStarted())
                             mLocationDisplay.startAsync();
                         break;
                     case 4:
                         // Start Compass Mode
-                        // This mode is better suited for waypoint navigation when the user is walking.
+                        // This mode is better suited for waypoint navigation when the user is walking
                         mLocationDisplay.setAutoPanMode(LocationDisplay.AutoPanMode.COMPASS_NAVIGATION);
                         if (!mLocationDisplay.isStarted())
                             mLocationDisplay.startAsync();
@@ -399,19 +493,20 @@ public class MainActivity extends AppCompatActivity {
                 return super.onSingleTapConfirmed(e);
             }
         });
+
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        // If request is cancelled, the result arrays are empty.
+        // If request is cancelled, the result arrays are empty
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            // Location permission was granted. This would have been triggered in response to failing to start the
-            // LocationDisplay, so try starting this again.
+            // Location permission was granted: This would have been triggered in response to failing to start the
+            // LocationDisplay, so try starting this again
             mLocationDisplay.startAsync();
         } else {
-            // If permission was denied, show toast to inform user what was chosen. If LocationDisplay is started again,
-            // request permission UX will be shown again, option should be shown to allow never showing the UX again.
-            // Alternative would be to disable functionality so request is not shown again.
+            // If permission was denied, show toast to inform user what was chosen and if LocationDisplay is started again,
+            // request permission UX will be shown again, option should be shown to allow never showing the UX again
+            // The alternative would be to disable functionality so request is not shown again
             Toast.makeText(MainActivity.this, getResources().getString(R.string.location_permission_denied), Toast
                     .LENGTH_SHORT).show();
 
@@ -420,26 +515,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
+    /*@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
         return true;
-    }
+    }*/
 
-    @Override
+    /*@Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_download:
-                Intent intent = new Intent(MainActivity.this, OfflineActivity.class);
-                startActivity(intent);
-                return true;
+            case :
+                //Intent intent = new Intent(MainActivity.this, OfflineActivity.class);
+                //startActivity(intent);
+                //return true;
             default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
+                // If we got here, the user's action was not recognized
+                // Invoke the superclass to handle it
                 return super.onOptionsItemSelected(item);
         }
-    }
+    }*/
 
     @Override
     protected void onPause() {

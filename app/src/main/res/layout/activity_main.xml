@@ -4,25 +4,20 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!-- MapView -->
     <com.esri.arcgisruntime.mapping.view.MapView
         android:id="@+id/mapView"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/action_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#00FFFFFF"
+            android:drawableLeft="@drawable/download"
+            tools:text="Download" />
     </com.esri.arcgisruntime.mapping.view.MapView>
 
-    <!--
-   <Button
-       android:id="@+id/startediting"
-       android:layout_width="match_parent"
-       android:layout_height="wrap_content"
-       android:layout_alignParentBottom="true"
-       android:layout_alignParentLeft="true"
-       android:layout_alignParentStart="true"
-       android:text="@string/startediting_text"
-       android:textColor="@android:color/background_light" /> -->
-
-   <!-- Spinner-->
     <Spinner
         android:id="@+id/spinner"
         android:layout_width="wrap_content"
