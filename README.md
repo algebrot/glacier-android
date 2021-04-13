@@ -3,7 +3,7 @@ Android application for trip planning when visiting Glacier National Park using 
 
 Check out sample screenshots of Map POI, Cabin, and Navigation features.
 
-![Glacierback App Logo](https://user-images.githubusercontent.com/23608216/114603487-a125f900-9c4c-11eb-8976-12bf10281370.png) 
+![Glacierback App Icon](https://user-images.githubusercontent.com/23608216/114603961-375a1f00-9c4d-11eb-95d9-60ce57ef0efd.png)
 
 Glacierback Icon by Jess Brown
 
